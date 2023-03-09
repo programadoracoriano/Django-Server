@@ -1,10 +1,9 @@
 """
 Here we have all the API Urls
 """
-from django.urls import path, include
+from django.urls import path
 from .views import *
 
 urlpatterns = [
-    path('signup/', Signup, name="APIlogin"),
-    
+    path('signup/', Signup, name="signup"),
 ] 
