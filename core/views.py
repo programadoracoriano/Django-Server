@@ -9,7 +9,13 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from .models import *
 from .serializers import *
+import stripe
+from decimal import Decimal
+from django.conf import settings
 # Create your views here.
+
+
+
 
 @api_view(['POST'])
 @authentication_classes([])
@@ -61,8 +67,9 @@ def getUserData(request):
 
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])
-def chargeAccount(request):
+def secret(request):
     if request.method == 'POST':
+        stripe.api_key = settings.STRIPE_SECRET
         res         = {}
         qs          = Profile.objects.get(user=request.user)
         try:
@@ -70,11 +77,15 @@ def chargeAccount(request):
             if amount > 5:
                 res = {"msg": "O valor minimo é 5€.", "success": False}
             else:
+                intent = stripe.PaymentIntent.create(
+                    amount=amount,
+                    currency="eur",
+                    automatic_payment_methods={"enabled": True}, )
                 amount += qs.funds
                 qs.funds(amount)
                 qs.save()
                 serializer = ProfileSerializer(qs, many=False)
-                res = {"msg": serializer.data, "success": False}
+                res = {"msg": serializer.data, "success": False, "client_secret": intent.client_secret}
         except:
             res = {"msg":"Só podes inserir montantes numerários.", "success":False}
         return Response(res)
