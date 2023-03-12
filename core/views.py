@@ -65,6 +65,15 @@ def getUserData(request):
         serializer  = ProfileSerializer(qs, many=False)
         return Response(serializer.data)
 
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+def getBikes(request):
+    if request.method == 'GET':
+        qs          = Bike.objects.order_by("serie_number")
+        serializer  = BikeSerializer(qs, many=True)
+        return Response(serializer.data)
+
+
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])
 def secret(request):
