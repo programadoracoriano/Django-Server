@@ -7,8 +7,8 @@ from django.contrib.auth import authenticate
 from rest_framework.views import APIView
 from django.utils import timezone
 from django.contrib.auth.models import User
-
-
+from .models import *
+from .serializers import *
 # Create your views here.
 
 @api_view(['POST'])
@@ -22,11 +22,11 @@ def Signup(request):
         getUsers = User.objects.filter(username=username)
         getEmail = User.objects.filter(email=email)
         if getUsers.count() > 0:
-            msg = {'msg':'Username already exists. Please, choose other username.', 'success':False}
+            msg = {'msg':'Utilizador já existe. Por favor escolhe outro nome de utilizador.', 'success':False}
         elif getEmail.count() > 0:
-            msg = {'msg':'E-mail already exists. Please, choose other e-mail.', 'success':False}
+            msg = {'msg':'E-mail já está registrado. Por favor, escolhe outro e-mail.', 'success':False}
         elif ' ' in username == True:
-            msg = {'msg': 'The username cannot contain spaces.', 'success': False}
+            msg = {'msg': 'O nome de utilizador não pode conter espaços.', 'success': False}
         elif len(username) < 6 or len(username)> 20:
             msg = {'msg': 'The username needs to have 6 to 20 characters.', 'success':False}
         elif len(password) < 8 or len(password)>16:
@@ -50,3 +50,31 @@ def login(request):            # <-- And here
         else:
             content = {'msg':'Username or password are incorrect.', 'success':False}
         return Response(content)
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+def getUserData(request):
+    if request.method == 'GET':
+        qs          = Profile.objects.get(user=request.user)
+        serializer  = ProfileSerializer(qs, many=False)
+        return Response(serializer.data)
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+def chargeAccount(request):
+    if request.method == 'POST':
+        res         = {}
+        qs          = Profile.objects.get(user=request.user)
+        try:
+            amount      = float(request.data['amount'])
+            if amount > 5:
+                res = {"msg": "O valor minimo é 5€.", "success": False}
+            else:
+                amount += qs.funds
+                qs.funds(amount)
+                qs.save()
+                serializer = ProfileSerializer(qs, many=False)
+                res = {"msg": serializer.data, "success": False}
+        except:
+            res = {"msg":"Só podes inserir montantes numerários.", "success":False}
+        return Response(res)
