@@ -25,7 +25,7 @@ class Profile(models.Model):
                                 verbose_name="Localização")
     phone    = models.IntegerField(null=True, blank=True, 
                                    verbose_name="Número de contato")
-    funds    = models.FloatField(null=True, blank=True, verbose_name="Fundos")
+    funds    = models.FloatField(null=True, blank=True, verbose_name="Fundos", default=100)
 
     def __str__(self):
         return self.user.first_name
