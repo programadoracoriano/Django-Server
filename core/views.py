@@ -36,3 +36,17 @@ def Signup(request):
             last_login=timezone.now())
             msg = {'msg': 'User created successfully!', 'success':True}
         return Response(msg)
+@api_view(['POST'])
+@authentication_classes([])
+def login(request):            # <-- And here
+    if request.method == 'POST':
+        username = request.data['username']
+        password = request.data['password']
+        user = authenticate(username=username, password=password)
+        content = {}
+        if user is not None:
+            token = Token.objects.get_or_create(user=user)
+            content = {'token': str(token[0]), 'msg':'Succesfully logged in.', 'success':True}
+        else:
+            content = {'msg':'Username or password are incorrect.', 'success':False}
+        return Response(content)
